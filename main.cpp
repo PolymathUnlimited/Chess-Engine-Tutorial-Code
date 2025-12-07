@@ -7,24 +7,18 @@ using namespace std;
 int width = 640;
 int height = 480;
 
-// global variables for vertex positions
-double x_1 = rand() % width;
-double x_2 = rand() % width;
-double x_3 = rand() % width;
-double y_1 = rand() % height;
-double y_2 = rand() % height;
-double y_3 = rand() % height;
+// global variables for board drawing parameters
+double board_x = 0.5 * (width - height);
+double board_y = 0;
+double board_size = height;
 
-// global variables for vertex velocities
-double vx_1 = 0.005 * (rand() % width) - 0.0025;
-double vx_2 = 0.005 * (rand() % width) - 0.0025;
-double vx_3 = 0.005 * (rand() % width) - 0.0025;
-double vy_1 = 0.005 * (rand() % width) - 0.0025;
-double vy_2 = 0.005 * (rand() % width) - 0.0025;
-double vy_3 = 0.005 * (rand() % width) - 0.0025;
+double square_size = board_size * 0.9 * 0.125;
+double square_x = board_x + board_size * 0.05;
+double square_y = board_y + board_size * 0.05;
 
-// global variable for elapsed time
-double t = 0;
+// global variables to keep track of the selected square
+int select_x = -1;
+int select_y = -1;
 
 // function to update the screen
 void draw()
@@ -32,42 +26,63 @@ void draw()
 	// clear the buffer
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	// draw a triangle to the buffer
-	glColor3f(1, 1, 1);
-	glBegin(GL_TRIANGLES);
-
-	glColor3f(sin(t * 0.9), cos(t * 0.4), 1);	// vertex 1
-	glVertex2f(x_1, y_1);
-
-	glColor3f(1, sin(t * 0.8), cos(t * 0.5));	// vertex 2
-	glVertex2f(x_2, y_2);
-
-	glColor3f(cos(t * 0.7), 1, sin(t * 0.6));	// vertex 3
-	glVertex2f(x_3, y_3);
-
+	// draw the board background
+	glColor3f(0.3, 0.15, 0.1);
+	glBegin(GL_QUADS);
+	glVertex2f(board_x, board_y);
+	glVertex2f(board_x + board_size, board_y);
+	glVertex2f(board_x + board_size, board_y + board_size);
+	glVertex2f(board_x, board_y + board_size);
 	glEnd();
 
-	// update the triangle vertex positions
-	x_1 += vx_1;
-	x_2 += vx_2;
-	x_3 += vx_3;
-	y_1 += vy_1;
-	y_2 += vy_2;
-	y_3 += vy_3;
+	// draw the board squares
+	glBegin(GL_QUADS);
+	for (int x = 0; x < 8; ++x)
+		for (int y = 0; y < 8; ++y)
+		{
+			if ((x + y) % 2) glColor3f(0.05, 0.3, 0.05);
+			else glColor3f(0.7, 0.65, 0.55);
 
-	// reflect off the edges of the window
-	if (x_1 < 0 || x_1 >= width) vx_1 *= -1;
-	if (x_2 < 0 || x_2 >= width) vx_2 *= -1;
-	if (x_3 < 0 || x_3 >= width) vx_3 *= -1;
-	if (y_1 < 0 || y_1 >= height) vy_1 *= -1;
-	if (y_2 < 0 || y_2 >= height) vy_2 *= -1;
-	if (y_3 < 0 || y_3 >= height) vy_3 *= -1;
+			glVertex2f(square_x + square_size * x, square_y + square_size * y);
+			glVertex2f(square_x + square_size * (x + 1), square_y + square_size * y);
+			glVertex2f(square_x + square_size * (x + 1), square_y + square_size * (y + 1));
+			glVertex2f(square_x + square_size * x, square_y + square_size * (y + 1));
+		}
+	glEnd();
 
-	// update time
-	t += 0.016;
+	// highlight the selected square
+	if (select_x >= 0 && select_y >= 0 && select_x < 8 && select_y < 8)
+	{
+		glColor3f(0, 1, 0);
+		glBegin(GL_QUADS);
+
+		glVertex2f(square_x + square_size * select_x, square_y + square_size * select_y);
+		glVertex2f(square_x + square_size * (select_x + 1), square_y + square_size * select_y);
+		glVertex2f(square_x + square_size * (select_x + 1), square_y + square_size * (select_y + 1));
+		glVertex2f(square_x + square_size * select_x, square_y + square_size * (select_y + 1));
+
+		glEnd();
+	}
 
 	// update the display by swapping buffers
 	glutSwapBuffers();
+}
+
+// function to handle mouse input
+void mouse(int button, int state, int x, int y)
+{
+	// select a square when we click on the window
+	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
+	{
+		select_x = floor((x - square_x) / square_size);
+		select_y = floor((y - square_y) / square_size);
+	}
+}
+
+// function to handle keyboard input
+void keydown(unsigned char key, int x, int y)
+{
+	if (key == 27) glutLeaveMainLoop(); // exit when the user presses esc
 }
 
 // timer function
@@ -76,6 +91,37 @@ void timer(int value)
 	// update the display every 16ms
 	glutPostRedisplay();
 	glutTimerFunc(16, timer, NULL);
+}
+
+// function to handle window resizing
+void resize(int w, int h)
+{
+	// set global width and height
+	width = w;
+	height = h;
+
+	// recalculate board parameters
+	if (width > height)
+	{
+		board_size = height;
+		board_x = 0.5 * (width - height);
+		board_y = 0;
+	}
+	else
+	{
+		board_size = width;
+		board_x = 0;
+		board_y = 0.5 * (height - width);
+	}
+
+	square_size = board_size * 0.9 * 0.125;
+	square_x = board_x + board_size * 0.05;
+	square_y = board_y + board_size * 0.05;
+
+	// reset the viewport
+	glViewport(0, 0, width, height);
+	glLoadIdentity();
+	gluOrtho2D(0, width, height, 0);
 }
 
 // main function
@@ -100,7 +146,10 @@ int main(int argc, char** argv)
 
 	// register callback functions
 	glutDisplayFunc(draw);
+	glutMouseFunc(mouse);
+	glutKeyboardFunc(keydown);
 	glutTimerFunc(16, timer, NULL);
+	glutReshapeFunc(resize);
 
 	// enter GLUT's main rendering loop
 	glutMainLoop();
