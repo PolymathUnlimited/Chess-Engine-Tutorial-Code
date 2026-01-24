@@ -1,5 +1,4 @@
 #include "chessboard.h"
-#include <iostream>
 #include <math.h>
 
 using namespace std;
@@ -25,11 +24,13 @@ void Chessboard::move(const Move& move)
 	// push a new state onto the state stack
 	stateStack[stackIndex + 1] = stateStack[stackIndex++];
 
-	// move the piece
-	uint8_t movedPiece = EMPTY;
-	uint64_t fromBoard = 1ULL << move.from;
-	uint64_t toBoard = 1ULL << move.to;
+	// get information about the move
+	uint64_t fromBoard = uint64_t(1) << move.from;
+	uint64_t toBoard = uint64_t(1) << move.to;
 	uint64_t moveBoard = fromBoard | toBoard;
+
+	// move a piece
+	uint8_t movedPiece = EMPTY;
 	for (int i = stateStack[stackIndex].turn == WHITE ? 0 : 6; i < (stateStack[stackIndex].turn == WHITE ? 6 : 12); ++i)
 	{
 		if (stateStack[stackIndex].bitboards[i] & fromBoard)
@@ -39,8 +40,8 @@ void Chessboard::move(const Move& move)
 			break;
 		}
 	}
-	
-	// capture pieces
+
+	// capture a piece
 	for (int i = stateStack[stackIndex].turn == WHITE ? 6 : 0; i < (stateStack[stackIndex].turn == WHITE ? 11 : 5); ++i)
 	{
 		if (stateStack[stackIndex].bitboards[i] & toBoard)
@@ -58,8 +59,9 @@ void Chessboard::move(const Move& move)
 	}
 
 	// set en-passant target
-	if ((movedPiece == WHITE_PAWN || movedPiece == BLACK_PAWN) && abs(move.from - move.to) == 16) stateStack[stackIndex].passantTarget = 1ULL << int((move.from + move.to) * 0.5);
+	if ((movedPiece == WHITE_PAWN || movedPiece == BLACK_PAWN) && abs(move.from - move.to) == 16) stateStack[stackIndex].passantTarget = uint64_t(1) << int((move.from + move.to) * 0.5);
 	else stateStack[stackIndex].passantTarget = 0;
+
 
 	// castling
 	if (movedPiece == WHITE_KING)
@@ -72,13 +74,13 @@ void Chessboard::move(const Move& move)
 		if (moveBoard == 0x0000000000000050) stateStack[stackIndex].bitboards[BLACK_ROOK] ^= 0x00000000000000a0;
 		else if (moveBoard == 0x0000000000000014) stateStack[stackIndex].bitboards[BLACK_ROOK] ^= 0x0000000000000009;
 	}
-	
+
 	// update castling rights
 	if (moveBoard & 0x9000000000000000) stateStack[stackIndex].WKC = false;
 	if (moveBoard & 0x1100000000000000) stateStack[stackIndex].WQC = false;
 	if (moveBoard & 0x0000000000000090) stateStack[stackIndex].BKC = false;
 	if (moveBoard & 0x0000000000000011) stateStack[stackIndex].BQC = false;
-
+	
 	// promotions
 	if (move.promotion != EMPTY)
 	{
@@ -86,7 +88,7 @@ void Chessboard::move(const Move& move)
 		stateStack[stackIndex].bitboards[move.promotion] ^= toBoard;
 	}
 
-	// switch whose turn it is
+	// switch turns
 	if (stateStack[stackIndex].turn == WHITE) stateStack[stackIndex].turn = BLACK;
 	else stateStack[stackIndex].turn = WHITE;
 }
@@ -101,18 +103,18 @@ Chessboard::Chessboard()
 	stateStack = new BoardState[1000];
 	stackIndex = 0;
 
-	stateStack[0].bitboards[WHITE_PAWN]   = 0x00ff000000000000;
+	stateStack[0].bitboards[WHITE_PAWN] = 0x00ff000000000000;
 	stateStack[0].bitboards[WHITE_KNIGHT] = 0x4200000000000000;
 	stateStack[0].bitboards[WHITE_BISHOP] = 0x2400000000000000;
-	stateStack[0].bitboards[WHITE_ROOK]   = 0x8100000000000000;
-	stateStack[0].bitboards[WHITE_QUEEN]  = 0x0800000000000000;
-	stateStack[0].bitboards[WHITE_KING]   = 0x1000000000000000;
-	stateStack[0].bitboards[BLACK_PAWN]   = 0x000000000000ff00;
+	stateStack[0].bitboards[WHITE_ROOK] = 0x8100000000000000;
+	stateStack[0].bitboards[WHITE_QUEEN] = 0x0800000000000000;
+	stateStack[0].bitboards[WHITE_KING] = 0x1000000000000000;
+	stateStack[0].bitboards[BLACK_PAWN] = 0x000000000000ff00;
 	stateStack[0].bitboards[BLACK_KNIGHT] = 0x0000000000000042;
 	stateStack[0].bitboards[BLACK_BISHOP] = 0x0000000000000024;
-	stateStack[0].bitboards[BLACK_ROOK]   = 0x0000000000000081;
-	stateStack[0].bitboards[BLACK_QUEEN]  = 0x0000000000000008;
-	stateStack[0].bitboards[BLACK_KING]   = 0x0000000000000010;
+	stateStack[0].bitboards[BLACK_ROOK] = 0x0000000000000081;
+	stateStack[0].bitboards[BLACK_QUEEN] = 0x0000000000000008;
+	stateStack[0].bitboards[BLACK_KING] = 0x0000000000000010;
 
 	stateStack[0].WKC = true;
 	stateStack[0].WQC = true;
