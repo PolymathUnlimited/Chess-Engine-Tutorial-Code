@@ -23,6 +23,8 @@ double square_y = board_y + board_size * 0.05;
 // global variables to keep track of the selected square
 int select_x = -1;
 int select_y = -1;
+
+// global varibales to keep track of promotions
 int promote_x = -1;
 int promote_y = -1;
 
@@ -208,7 +210,7 @@ void draw()
 			drawPiece(square_x + square_size * (0.5 + x), square_y + square_size * (0.5 + y), square_size, game.getPiece(square));
 		}
 
-	// draw promotion hints
+	// draw promotion UI elements
 	if (promote_y == 0)
 	{
 		glBegin(GL_QUADS);
@@ -218,6 +220,7 @@ void draw()
 		glVertex2f(square_x + square_size * (promote_x + 1.1), square_y - square_size * 0.1);
 		glVertex2f(square_x + square_size * (promote_x + 1.1), square_y + square_size * 4.1);
 		glVertex2f(square_x + square_size * (promote_x - 0.1), square_y + square_size * 4.1);
+
 
 		glColor3f(0, 0, 0);
 		glVertex2f(square_x + square_size * promote_x, square_y);
@@ -232,7 +235,7 @@ void draw()
 		drawPiece(square_x + square_size * (0.5 + promote_x), square_y + square_size * 2.5, square_size, WHITE_BISHOP);
 		drawPiece(square_x + square_size * (0.5 + promote_x), square_y + square_size * 3.5, square_size, WHITE_KNIGHT);
 	}
-	else if (promote_y == 7)
+	if (promote_y == 7)
 	{
 		glBegin(GL_QUADS);
 
@@ -241,6 +244,7 @@ void draw()
 		glVertex2f(square_x + square_size * (promote_x + 1.1), square_y + square_size * 8.1);
 		glVertex2f(square_x + square_size * (promote_x + 1.1), square_y + square_size * 3.9);
 		glVertex2f(square_x + square_size * (promote_x - 0.1), square_y + square_size * 3.9);
+
 
 		glColor3f(1, 1, 1);
 		glVertex2f(square_x + square_size * promote_x, square_y + square_size * 8);
@@ -269,7 +273,7 @@ void mouse(int button, int state, int x, int y)
 		int click_x = floor((x - square_x) / square_size);
 		int click_y = floor((y - square_y) / square_size);
 
-		// if we are promoting, then promote a pawn
+		// if we need to promote, then promote a piece
 		if (promote_y == 0)
 		{
 			if (click_x == promote_x)
@@ -342,7 +346,6 @@ void mouse(int button, int state, int x, int y)
 			select_x = -1;
 			select_y = -1;
 		}
-
 		// otherwise, select the square that was clicked
 		else
 		{
@@ -362,7 +365,7 @@ void keydown(unsigned char key, int x, int y)
 		square_y += 8 * square_size;
 		square_size *= -1;
 	}
-	if (key == '\b')
+	if (key == '\b') // undo if the user presses backspace
 	{
 		game.undo();
 		--moveIndex;
