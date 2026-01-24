@@ -8,22 +8,19 @@
 #define WHITE_ROOK 3
 #define WHITE_QUEEN 4
 #define WHITE_KING 5
-
 #define BLACK_PAWN 6
 #define BLACK_KNIGHT 7
 #define BLACK_BISHOP 8
 #define BLACK_ROOK 9
 #define BLACK_QUEEN 10
 #define BLACK_KING 11
-
 #define EMPTY 12
 
 #define WHITE 13
 #define BLACK 14
 
-class Move
+struct Move
 {
-public:
 	// move coordinates
 	std::uint8_t from;
 	std::uint8_t to;
@@ -32,9 +29,8 @@ public:
 	std::uint8_t promotion;
 };
 
-class BoardState
+struct BoardState
 {
-public:
 	// bitboards for each piece type
 	std::uint64_t bitboards[12];
 
@@ -45,7 +41,7 @@ public:
 	std::uint64_t passantTarget;
 
 	// whose turn it is
-	uint8_t turn;
+	std::uint8_t turn;
 };
 
 class Chessboard
