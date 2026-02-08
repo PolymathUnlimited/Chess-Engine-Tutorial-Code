@@ -135,7 +135,6 @@ void Chessboard::pseudoMoves(Move* moves, int& numMoves)
 				moves[numMoves++] = { origin, square, WHITE_KNIGHT };
 			}
 			else moves[numMoves++] = { origin, square, EMPTY };
-
 		}
 		while (doubles)
 		{
@@ -194,7 +193,7 @@ void Chessboard::pseudoMoves(Move* moves, int& numMoves)
 			}
 		}
 
-		// diagonal moves
+		// diagonalMoves
 		bb = stateStack[stackIndex].bitboards[WHITE_BISHOP] | stateStack[stackIndex].bitboards[WHITE_QUEEN];
 		while (bb)
 		{
@@ -226,7 +225,7 @@ void Chessboard::pseudoMoves(Move* moves, int& numMoves)
 		}
 
 		// cardinal moves
-		bb = stateStack[stackIndex].bitboards[WHITE_QUEEN] | stateStack[stackIndex].bitboards[WHITE_ROOK];
+		bb = stateStack[stackIndex].bitboards[WHITE_ROOK] | stateStack[stackIndex].bitboards[WHITE_QUEEN];
 		while (bb)
 		{
 			square = lsbIndex(bb);
@@ -306,8 +305,7 @@ void Chessboard::pseudoMoves(Move* moves, int& numMoves)
 		{
 			square = lsbIndex(bb);
 			bb &= bb - 1;
-			uint8_t origin = square - 7;
-			if (square >= 56)
+			uint8_t origin = square - 7; if (square >= 56)
 			{
 				moves[numMoves++] = { origin, square, BLACK_QUEEN };
 				moves[numMoves++] = { origin, square, BLACK_ROOK };
@@ -316,13 +314,12 @@ void Chessboard::pseudoMoves(Move* moves, int& numMoves)
 			}
 			else moves[numMoves++] = { origin, square, EMPTY };
 		}
-		bb = ((stateStack[stackIndex].bitboards[BLACK_PAWN] & 0x7f7f7f7f7f7f7f7f) << 9) & (whiteBoard | stateStack[stackIndex].passantTarget);
+		bb = ((stateStack[stackIndex].bitboards[BLACK_PAWN] & 0x7f7f7f7f7f7f7f7f) << 9)& (whiteBoard | stateStack[stackIndex].passantTarget);
 		while (bb)
 		{
 			square = lsbIndex(bb);
 			bb &= bb - 1;
-			uint8_t origin = square - 9;
-			if (square >= 56)
+			uint8_t origin = square - 9; if (square >= 56)
 			{
 				moves[numMoves++] = { origin, square, BLACK_QUEEN };
 				moves[numMoves++] = { origin, square, BLACK_ROOK };
@@ -349,7 +346,7 @@ void Chessboard::pseudoMoves(Move* moves, int& numMoves)
 			}
 		}
 
-		// diagonal moves
+		// diagonalMoves
 		bb = stateStack[stackIndex].bitboards[BLACK_BISHOP] | stateStack[stackIndex].bitboards[BLACK_QUEEN];
 		while (bb)
 		{
@@ -381,7 +378,7 @@ void Chessboard::pseudoMoves(Move* moves, int& numMoves)
 		}
 
 		// cardinal moves
-		bb = stateStack[stackIndex].bitboards[BLACK_QUEEN] | stateStack[stackIndex].bitboards[BLACK_ROOK];
+		bb = stateStack[stackIndex].bitboards[BLACK_ROOK] | stateStack[stackIndex].bitboards[BLACK_QUEEN];
 		while (bb)
 		{
 			square = lsbIndex(bb);
@@ -394,7 +391,7 @@ void Chessboard::pseudoMoves(Move* moves, int& numMoves)
 				uint64_t blockers = board & cardinalRays[square][i];
 				if (blockers)
 				{
-					uint8_t blockerIndex = -1;
+					uint8_t blockerIndex;
 					if (i == 0 || i == 2) blockerIndex = lsbIndex(blockers);
 					else blockerIndex = msbIndex(blockers);
 					cardinalMoves &= ~cardinalRays[blockerIndex][i];
@@ -441,6 +438,7 @@ bool Chessboard::isLegal(const Move& move)
 			undo();
 			if (!illegal) return true;
 		}
+
 	return false;
 }
 
@@ -484,7 +482,7 @@ bool Chessboard::isAttacked(uint8_t square, uint8_t color)
 
 		// attacked by a pawn
 		if ((((stateStack[stackIndex].bitboards[BLACK_PAWN] & 0xfefefefefefefefe) << 7) | ((stateStack[stackIndex].bitboards[BLACK_PAWN] & 0x7f7f7f7f7f7f7f7f) << 9)) & (uint64_t(1) << square)) return true;
-
+	
 		// attacked by a king
 		if (kingAttacks[square] & stateStack[stackIndex].bitboards[BLACK_KING]) return true;
 	}
@@ -514,7 +512,7 @@ bool Chessboard::isAttacked(uint8_t square, uint8_t color)
 			uint64_t blockers = diagonalRays[square][i] & board;
 			if (blockers & attackers)
 			{
-				uint8_t blockerIndex = -1;
+				uint8_t blockerIndex;
 				if (i == 0 || i == 3) blockerIndex = lsbIndex(blockers);
 				else blockerIndex = msbIndex(blockers);
 				if (attackers & (uint64_t(1) << blockerIndex)) return true;
@@ -525,7 +523,7 @@ bool Chessboard::isAttacked(uint8_t square, uint8_t color)
 		if (knightAttacks[square] & stateStack[stackIndex].bitboards[WHITE_KNIGHT]) return true;
 
 		// attacked by a pawn
-		if ((((stateStack[stackIndex].bitboards[WHITE_PAWN] & 0xfefefefefefefefe) << 7) | ((stateStack[stackIndex].bitboards[WHITE_PAWN] & 0x7f7f7f7f7f7f7f7f) << 9)) & (uint64_t(1) << square)) return true;
+		if ((((stateStack[stackIndex].bitboards[WHITE_PAWN] & 0xfefefefefefefefe) >> 9) | ((stateStack[stackIndex].bitboards[WHITE_PAWN] & 0x7f7f7f7f7f7f7f7f) >> 7)) & (uint64_t(1) << square)) return true;
 
 		// attacked by a king
 		if (kingAttacks[square] & stateStack[stackIndex].bitboards[WHITE_KING]) return true;
@@ -550,7 +548,7 @@ Chessboard::Chessboard()
 	stateStack = new BoardState[1000];
 	stackIndex = 0;
 
-	// set up the initial board state
+	// set up initial board state
 	stateStack[0].bitboards[WHITE_PAWN] = 0x00ff000000000000;
 	stateStack[0].bitboards[WHITE_KNIGHT] = 0x4200000000000000;
 	stateStack[0].bitboards[WHITE_BISHOP] = 0x2400000000000000;
@@ -625,6 +623,5 @@ Chessboard::Chessboard()
 
 Chessboard::~Chessboard()
 {
-	// free state stack memory
 	delete[] stateStack;
 }
