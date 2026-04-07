@@ -153,7 +153,7 @@ Move Search::bestMove(Chessboard& board, int depth)
 	return bestMove;
 }
 
-int Search::getNodesSearched()
+uint64_t Search::getNodesSearched()
 {
 	return nodesSearched;
 }
