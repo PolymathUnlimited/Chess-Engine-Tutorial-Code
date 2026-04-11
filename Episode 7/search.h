@@ -5,7 +5,7 @@
 class Search
 {
 private:
-	int nodesSearched;
+	uint64_t nodesSearched;
 
 	// board evaluation function
 	int evaluate(Chessboard& board);
@@ -18,5 +18,5 @@ public:
 	Move bestMove(Chessboard& board, int depth);
 
 	// returns the number of nodes searched during the last bestMove call
-	int getNodesSearched();
+	uint64_t getNodesSearched();
 };
