@@ -34,7 +34,7 @@ int promote_y = -1;
 
 // global variabls to keep track of AI moves
 bool undo = false;
-uint8_t AI_turn = WHITE;
+uint8_t AI_turn = BLACK;
 int AI_depth = 5;
 
 // stack of previous moves
